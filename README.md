@@ -1,4 +1,6 @@
 ![logo](/images/banner.png)
+
+[![](https://data.jsdelivr.com/v1/package/npm/spectral.js/badge?style=rounded)](https://www.jsdelivr.com/package/npm/spectral.js)
 [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/onedayofcrypto.svg?style=social&label=Follow%20%40onedayofcrypto)](https://twitter.com/onedayofcrypto)
 
 **Spectral.js** is a lightweight JavaScript library for realistic color mixing based on the **Kubelka-Munk theory**.
@@ -302,4 +304,5 @@ MIT © **2025 Ronald van Wijnen**
 - Thanks to [Scott Allen Burns](http://scottburns.us/) for his research and publication of [Generating Reflectance Curves from sRGB Triplets](http://scottburns.us/reflectance-curves-from-srgb/). The spectral data **Spectral.js** uses is created with a variation of his [LHTSS](http://scottburns.us/reflectance-curves-from-srgb-10/) method.
 - **Spectral.js** uses color conversion matrices and structural inspiration from [Color.js](https://colorjs.io/), aiming to maintain compatibility in function naming and color space representation.
 - Uses [codedye](https://github.com/Tezumie/codedye) for syntax highlighting on the site.
+
 - Thanks also to [SCRT WPNS](https://scrtwpns.com/) for their awesome product [Mixbox](https://scrtwpns.com/mixbox/) which inspired me to research the Kubelka-Munk theory.
