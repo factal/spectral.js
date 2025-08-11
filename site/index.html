@@ -8,10 +8,10 @@ to deal in the Software without restriction, including without limitation
 the rights to use, copy, modify, merge, publish, distribute, sublicense,
 and/or sell copies of the Software, and to permit persons to whom the
 Software is furnished to do so, subject to the following conditions:
-//
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-//
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,10 +21,30 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE. -->
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <title>Spectral.js</title>
+  <link rel="canonical" href="https://onedayofcrypto.art/" />
+
+  <title>Spectral.js — Realistic Paint-Like Color Mixing in JavaScript</title>
+
+  <meta name="title" content="Spectral.js — Realistic Paint-Like Color Mixing in JavaScript">
+  <meta name="description" content="Spectral.js is an MIT-licensed JavaScript library for realistic pigment-based color mixing using spectral reflectance and Kubelka-Munk theory.">
+  <meta name="author" content="Ronald van Wijnen">
+  <meta name="keywords" content="Spectral.js, color mixing, pigment mixing, Kubelka-Munk, paint blending, JavaScript color library, color interpolation, realistic color blending, spectral color mixing, MIT license">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://onedayofcrypto.art/">
+  <meta property="og:title" content="Spectral.js — Realistic Paint-Like Color Mixing in JavaScript">
+  <meta property="og:description" content="Mix colors like real pigments using spectral math and perceptual color spaces. Free and open source under MIT license.">
+  <meta property="og:image" content="https://onedayofcrypto.art/images/social-preview.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://onedayofcrypto.art/">
+  <meta name="twitter:title" content="Spectral.js — Realistic Paint-Like Color Mixing in JavaScript">
+  <meta name="twitter:description" content="A JavaScript library for pigment-style color blending using spectral reflectance and Kubelka-Munk mixing.">
+  <meta name="twitter:image" content="https://onedayofcrypto.art/images/social-preview.png">
+
   <meta charset="utf-8">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
@@ -43,7 +63,7 @@ DEALINGS IN THE SOFTWARE. -->
       padding: 0;
       margin: 0;
       font-family: Arial;
-      color: #aaa;
+      color: #cccccc;
       font-size: 14px;
       background: #191326;
     }
@@ -54,35 +74,34 @@ DEALINGS IN THE SOFTWARE. -->
       font-size: 9px;
     }
 
-    .chart_container {
-      width: 500px;
-      height: 400px;
-      margin-bottom: 20px;
-    }
-
-    .mix_part_bar {
+    .mix_part {
       cursor: pointer;
     }
 
-    .mix_part_palette {
-      cursor: pointer;
-    }
-
-    .mix_part_gradient {
-      cursor: pointer;
-    }
-
-    .mix_part_multi {
+    .hexagon {
       width: 11%;
       aspect-ratio: 1;
       clip-path: polygon(-50% 50%, 50% 100%, 150% 50%, 50% 0);
-      cursor: pointer;
+    }
+
+    .column {
+      width: 500px;
     }
 
     .picker {
       margin-bottom: 10px;
       width: 30px;
+      border: 0;
+      position: relative;
+      top: 1px;
       cursor: pointer;
+    }
+
+    button {
+      background: #ffffff;
+      color: #191326;
+      height: 26px;
+      border: 0;
     }
 
     .handwriting-h1 {
@@ -135,7 +154,6 @@ DEALINGS IN THE SOFTWARE. -->
       backface-visibility: hidden;
     }
 
-
     .identifier,
     .objectName {
       color: #f92aad;
@@ -155,21 +173,18 @@ DEALINGS IN THE SOFTWARE. -->
           </a>
         </div>
         <div style="display: flex; justify-content: start; flex-wrap: wrap;">
-          <div style="width: 500px;">
+          <div class="column">
             <p style="padding-top: 20px; padding-right: 25px;">
-              <strong>Spectral.js</strong> is a lightweight JavaScript library for <strong>realistic pigment
-                mixing</strong>, using the
-              <a href="https://en.wikipedia.org/wiki/Kubelka%E2%80%93Munk_theory" style="color: #bbb;" target="_blank">Kubelka-Munk
-                theory</a>
+              <strong>Spectral.js</strong> is a lightweight JavaScript library for <strong>realistic pigment mixing</strong>, using the
+              <a href="https://en.wikipedia.org/wiki/Kubelka%E2%80%93Munk_theory" style="color: #cccccc;" target="_blank">Kubelka-Munk theory</a>
               to simulate how real paints absorb and scatter light.
             </p>
           </div>
-          <div style="width: 500px;">
+          <div class="column">
             <p style="padding-top: 20px;">
-              Unlike typical RGB blending, Spectral.js calculates pigment interactions through spectral reflectance and
+              Unlike typical RGB blending, spectral.js calculates pigment interactions through spectral reflectance and
               colorimetric math — including <strong>OKLab</strong>, <strong>OKLCh</strong>, and ΔE gamut mapping — for
-              accurate,
-              perceptual mixing.
+              accurate, perceptual mixing.
             </p>
           </div>
         </div>
@@ -183,35 +198,32 @@ DEALINGS IN THE SOFTWARE. -->
               </div>
             </div>
           </div>
+          <button id="share_button" style="margin-bottom: 10px;">Share this mix</button>
+          <br>
           <span class="handwriting-h2">Color 1</span>
           <br>
           <input type="color" id="color1" class="picker">
           <button onclick="random('1')" style="position: relative; top: -7px;">Random</button>
           <div>
-            <label for="color1_tinting_strength" class="handwriting-h3">Tinting
-              Strength</label>
+            <label for="color1_tinting_strength" class="handwriting-h3">Tinting Strength</label>
             <input type="range" id="color1_tinting_strength" class="tinting_strength" style="width: 90px;" min="0.1" max="2" value="1" step="0.05" />
             <span id="color1_tinting_value" class="handwriting-sm" style="position: relative; top: -4px;">1.00</span>
           </div>
-          <br>
           <span class="handwriting-h2">Color 2</span>
           <br>
           <input type="color" id="color2" class="picker">
           <button onclick="random('2')" style="position: relative; top: -7px;">Random</button>
           <div>
-            <label for="color2_tinting_strength" class="handwriting-h3">Tinting
-              Strength</label>
+            <label for="color2_tinting_strength" class="handwriting-h3">Tinting Strength</label>
             <input type="range" id="color2_tinting_strength" class="tinting_strength" style="width: 90px;" min="0.1" max="2" value="1" step="0.05" />
             <span id="color2_tinting_value" class="handwriting-sm" style="position: relative; top: -4px;">1.00</span>
           </div>
-          <br>
           <span class="handwriting-h2">Color 3</span>
           <br>
           <input type="color" id="color3" class="picker">
           <button onclick="random('3')" style="position: relative; top: -7px;">Random</button>
           <div>
-            <label for="color3_tinting_strength" class="handwriting-h3">Tinting
-              Strength</label>
+            <label for="color3_tinting_strength" class="handwriting-h3">Tinting Strength</label>
             <input type="range" id="color3_tinting_strength" class="tinting_strength" style="width: 90px;" min="0.1" max="2" value="1" step="0.05" />
             <span id="color3_tinting_value" class="handwriting-sm" style="position: relative; top: -4px;">1.00</span>
           </div>
@@ -220,7 +232,7 @@ DEALINGS IN THE SOFTWARE. -->
           <br>
           <label for="color_preset" class="handwriting-h2">Preset</label>
           <br>
-          <select id="color_preset" style="margin-bottom: 10px; width: 50px;">
+          <select id="color_preset" style="margin-bottom: 10px; width: 50px; border: 0; height: 26px;">
             <option value="1" selected>1</option>
             <option value="2">2</option>
             <option value="3">3</option>
@@ -236,28 +248,29 @@ DEALINGS IN THE SOFTWARE. -->
           </select>
           <br>
           <label for="gamutmethod" class="handwriting-h2">Gamutmapping</label>
-          <select id="gamutmethod" style="margin-bottom: 10px; width: 75px;">
+          <select id="gamutmethod" style="margin-bottom: 10px; width: 75px; border: 0; height: 26px;">
             <option value="none">None</option>
             <option value="clip" selected>Clip</option>
             <option value="map">Map</option>
           </select>
+          <button onclick="preview()" style="margin-bottom: 10px;">Preview</button>
         </div>
         <div style="display: flex; flex-wrap: wrap;">
-          <div style="width: 500px;">
-            <div>
-              <span class="handwriting-h1" style="display: flex; justify-content: center;">Mixing</span>
-              <div id="mix_container_bar" class="mix_container"></div>
-              <pre style="margin: 0 15px;"><code id="mix_container_bar_code"></code></pre>
-              <span class="handwriting-h1" style="display: flex; justify-content: center;">Palette</span>
-              <div id="mix_container_palette" class="mix_container" style="display: flex; justify-content: center;"></div>
-              <pre style="margin: 0 15px;"><code id="mix_container_palette_code"></code></pre>
-              <span class="handwriting-h1" style="display: flex; justify-content: center;">Gradient</span>
-              <div id="mix_container_gradient" class="mix_container"></div>
-              <pre style="margin: 0 15px;"><code id="mix_container_gradient_code"></code></pre>
-            </div>
+          <div class="column">
+            <span class="handwriting-h1" style="display: flex; justify-content: center;">Setup</span>
+            <pre style="margin: 0 15px;"><code id="setup_code"></code></pre>
+            <span class="handwriting-h1" style="display: flex; justify-content: center;">Mix</span>
+            <div id="mix_container_bar" class="mix_container"></div>
+            <pre style="margin: 0 15px;"><code id="mix_container_bar_code"></code></pre>
+            <span class="handwriting-h1" style="display: flex; justify-content: center;">Palette</span>
+            <div id="mix_container_palette" class="mix_container" style="display: flex; justify-content: center;"></div>
+            <pre style="margin: 0 15px;"><code id="mix_container_palette_code"></code></pre>
+            <span class="handwriting-h1" style="display: flex; justify-content: center;">Gradient</span>
+            <div id="mix_container_gradient" class="mix_container"></div>
+            <pre style="margin: 0 15px;"><code id="mix_container_gradient_code"></code></pre>
           </div>
-          <div style="width: 500px;">
-            <span class="handwriting-h1" style="display: flex; justify-content: center;">Multi-color mixing</span>
+          <div class="column">
+            <span class="handwriting-h1" style="display: flex; justify-content: center;">Multi-color mix</span>
             <div id="mix_container_multi" class="mix_container" style="height: 380px;"></div>
             <pre style="margin: 0 15px;"><code id="mix_container_multi_code"></code></pre>
             <span class="handwriting-h2" style="display: flex; justify-content: center; margin-top: 20px;">Available on GitHub</span>
@@ -267,19 +280,84 @@ DEALINGS IN THE SOFTWARE. -->
           </div>
         </div>
       </div>
+    </div>
   </main>
+  <div id="share_overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: #221A35; padding: 20px 20px; max-width: 480px; width: 90%; position: relative; box-shadow: 0 0 30px rgba(0,0,0,0.6);">
+      <button id="close_button" style="position: absolute; top: 5px; right: 10px; background: none; border: none; color: #cccccc; font-size: 22px;">×</button>
+      <h2 class="handwriting-h2">Share this mix</h2>
+      <p>Tap or click the image to copy it to your clipboard. On mobile, choose Copy and paste it into a tweet. On desktop, click Tweet and paste — or just copy the link to share anywhere.</p>
+      <div style="width: 440px;">
+        <canvas style="border: 1px solid #333333; width: 440px; height: 440px; cursor: pointer;" id="canvas" width="440" height="440"></canvas>
+      </div>
+      <div style="display: flex; align-items: center; margin: 5px 0;">
+        <input id="share_url_field" type="text" readonly style="flex: 1; padding: 4px 6px; background: #191326; color: #cccccc; border: 1px solid #333333;">
+      </div>
+      <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin: 10px 0; width: 100%; font-family: sans-serif;">
+        <button id="tweet_button">
+          🐦 Tweet
+        </button>
+        <span style="font-size: 14px;">or</span>
+        <button id="copy_link_button">
+          📋 Copy Link
+        </button>
+      </div>
+      <span id="copied_message" style="display: none; justify-content: center;">
+        <strong style="padding: 4px 6px; width: fit-content; color: #cccccc;">Copied to clipboard!</strong>
+      </span>
+    </div>
+  </div>
+
   <script type="text/javascript">
     let mixCount = 8;
     let barCount = 160;
+    let canvasWidth = 600;
+    let canvasHeight = 600;
 
     document.addEventListener('DOMContentLoaded', function () {
+      //canvas
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      const dpr = 2;
+      canvas.width = Math.floor(canvasWidth * dpr);
+      canvas.height = Math.floor(canvasHeight * dpr);
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
       //starting values
       document.querySelector("#color1").value = "#FCF046";
       document.querySelector("#color2").value = "#E53166";
       document.querySelector("#color3").value = "#3375DA";
 
+      const params = new URLSearchParams(window.location.search);
+
+      if (params.has('c1')) {
+        document.querySelector("#color1").value = '#' + params.get('c1');
+      }
+
+      if (params.has('ts1')) {
+        document.querySelector("#color1_tinting_strength").value = Math.max(Math.min(parseFloat(params.get('ts1')), 2), 0);
+      }
+
+      if (params.has('c2')) {
+        document.querySelector("#color2").value = '#' + params.get('c2');
+      }
+
+      if (params.has('ts2')) {
+        document.querySelector("#color2_tinting_strength").value = Math.max(Math.min(parseFloat(params.get('ts2')), 2), 0);
+      }
+
+      if (params.has('c3')) {
+        document.querySelector("#color3").value = '#' + params.get('c3');
+      }
+
+      if (params.has('ts3')) {
+        document.querySelector("#color3_tinting_strength").value = Math.max(Math.min(parseFloat(params.get('ts3')), 2), 0);
+      }
+
+      updateTintingStrengthText();
       updateSelectedColor(new spectral.Color(document.querySelector("#color1").value));
-      //starting values
 
       setupBar();
       setupPalette();
@@ -294,15 +372,18 @@ DEALINGS IN THE SOFTWARE. -->
           updatePalette();
           updateGradient();
           updateMulti();
+
+          updateCodeBlock("#setup_code", `let color1 = new spectral.Color("${document.querySelector("#color1").value}");
+let color2 = new spectral.Color("${document.querySelector("#color2").value}");
+let color3 = new spectral.Color("${document.querySelector("#color3").value}");
+
+let size = 8; //palette size`);
         });
       });
 
       document.querySelectorAll(".tinting_strength").forEach(d => {
         d.addEventListener("input", function (e) {
-          document.querySelector("#color1_tinting_value").textContent = parseFloat(document.querySelector("#color1_tinting_strength").value).toFixed(2);
-          document.querySelector("#color2_tinting_value").textContent = parseFloat(document.querySelector("#color2_tinting_strength").value).toFixed(2);
-          document.querySelector("#color3_tinting_value").textContent = parseFloat(document.querySelector("#color3_tinting_strength").value).toFixed(2);
-
+          updateTintingStrengthText();
           updateBar();
           updatePalette();
           updateGradient();
@@ -416,6 +497,12 @@ DEALINGS IN THE SOFTWARE. -->
         updatePalette();
         updateGradient();
         updateMulti();
+
+        updateCodeBlock("#setup_code", `let color1 = new spectral.Color("${document.querySelector("#color1").value}");
+let color2 = new spectral.Color("${document.querySelector("#color2").value}");
+let color3 = new spectral.Color("${document.querySelector("#color3").value}");
+
+let size = 8; //palette size`);
       });
 
       updateBar();
@@ -423,9 +510,27 @@ DEALINGS IN THE SOFTWARE. -->
       updateGradient();
       updateMulti();
 
+      updateCodeBlock("#setup_code", `let color1 = new spectral.Color("${document.querySelector("#color1").value}");
+let color2 = new spectral.Color("${document.querySelector("#color2").value}");
+let color3 = new spectral.Color("${document.querySelector("#color3").value}");
+
+let size = 8; //palette size`);
+
+      updateCodeBlock("#mix_container_bar_code", `let mix = spectral.mix([color1, ...], [color2, ...]);`);
+
+      updateCodeBlock("#mix_container_palette_code", `let palette = spectral.palette(color1, color2, size)[...];`);
+
+      updateCodeBlock("#mix_container_gradient_code", `let gradient = spectral.gradient(...,
+  [color1, 0.0], [color2, 0.33], [color3, 0.66], [color1, 1.0]
+);`);
+
+      updateCodeBlock("#mix_container_multi_code", `let mix = spectral.mix(
+     [color1, ...], [color2, ...], [color3, ...]
+);`);
+
     }, false);
 
-    let setupBar = () => {
+    const setupBar = () => {
       let mix_container_bar = document.querySelector('#mix_container_bar');
       let mix_container_bar_data = "";
 
@@ -435,15 +540,15 @@ DEALINGS IN THE SOFTWARE. -->
         let factor1 = barCount - i;
         let factor2 = i;
 
-        mix_container_bar_data += `<span class='mix_part_bar' factor_1='${factor1}' factor_2='${factor2}' style='background: #fff; width: ${(100 / barCount)}%; ${i % (barCount / 2) === 0 ? '' : ' height: 90%; align-self: center;'}'></span>`;
+        mix_container_bar_data += `<span class='mix_part' factor_1='${factor1}' factor_2='${factor2}' style='background: #fff; width: ${(100 / barCount)}%; ${i % (barCount / 2) === 0 ? '' : ' height: 90%; align-self: center;'}'></span>`;
       }
 
       mix_container_bar_data += "</div>"
       mix_container_bar.innerHTML = mix_container_bar_data;
 
-      document.querySelectorAll("#mix_container_bar .mix_part_bar").forEach(d => {
+      document.querySelectorAll("#mix_container_bar .mix_part").forEach(d => {
         d.addEventListener("click", function (e) {
-          let mixPart = e.target.closest('.mix_part_bar');
+          let mixPart = e.target.closest('.mix_part');
 
           let c1 = new spectral.Color(document.querySelector("#color1").value);
           let c2 = new spectral.Color(document.querySelector("#color2").value);
@@ -474,22 +579,22 @@ DEALINGS IN THE SOFTWARE. -->
       });
     }
 
-    let setupPalette = () => {
+    const setupPalette = () => {
       let mix_container_palette = document.querySelector('#mix_container_palette');
       let mix_container_palette_data = "";
 
       mix_container_palette_data += "<div style='display: flex; justify-content: center; height: 60px; width: 100%; padding: 0 15px;'>";
 
       for (let i = 0; i < mixCount; i++) {
-        mix_container_palette_data += `<span class='mix_part_palette${(i == 0 ? ' selected' : '')}' index='${i}' style='background: #fff; width: ${100 / mixCount}%; overflow: hidden;'></span>`;
+        mix_container_palette_data += `<span class='mix_part${(i == 0 ? ' selected' : '')}' index='${i}' style='background: #fff; width: ${100 / mixCount}%; overflow: hidden;'></span>`;
       }
 
       mix_container_palette_data += "</div>"
       mix_container_palette.innerHTML = mix_container_palette_data;
 
-      document.querySelectorAll("#mix_container_palette .mix_part_palette").forEach(d => {
+      document.querySelectorAll("#mix_container_palette .mix_part").forEach(d => {
         d.addEventListener("click", function (e) {
-          let mixPart = e.target.closest('.mix_part_palette');
+          let mixPart = e.target.closest('.mix_part');
 
           let c1 = new spectral.Color(document.querySelector("#color1").value);
           let c2 = new spectral.Color(document.querySelector("#color2").value);
@@ -518,7 +623,7 @@ DEALINGS IN THE SOFTWARE. -->
       });
     }
 
-    let setupGradient = () => {
+    const setupGradient = () => {
       let mix_container_gradient = document.querySelector('#mix_container_gradient');
       let mix_container_gradient_data = "";
 
@@ -527,15 +632,15 @@ DEALINGS IN THE SOFTWARE. -->
       for (let i = 0; i <= barCount; i++) {
         let factor = i / barCount;
 
-        mix_container_gradient_data += `<span class='mix_part_gradient' factor='${factor}' style='background: #fff; width: ${(100 / barCount)}%; ${i % (barCount / 2) === 0 ? '' : ' height: 90%; align-self: center;'}'></span>`;
+        mix_container_gradient_data += `<span class='mix_part' factor='${factor}' style='background: #fff; width: ${(100 / barCount)}%; ${i % (barCount / 3) <= 1 || i === barCount ? '' : ' height: 90%; align-self: center;'}'></span>`;
       }
 
       mix_container_gradient_data += "</div>"
       mix_container_gradient.innerHTML = mix_container_gradient_data;
 
-      document.querySelectorAll("#mix_container_gradient .mix_part_gradient").forEach(d => {
+      document.querySelectorAll("#mix_container_gradient .mix_part").forEach(d => {
         d.addEventListener("click", function (e) {
-          let mixPart = e.target.closest('.mix_part_gradient');
+          let mixPart = e.target.closest('.mix_part');
 
           let c1 = new spectral.Color(document.querySelector("#color1").value);
           let c2 = new spectral.Color(document.querySelector("#color2").value);
@@ -552,8 +657,9 @@ DEALINGS IN THE SOFTWARE. -->
           let gradient = spectral.gradient(
             factor,
             [c1, 0.0],
-            [c2, 0.5],
-            [c3, 1.0]
+            [c2, 0.33],
+            [c3, 0.66],
+            [c1, 1.0]
           );
 
           if (gamutmethod != 'none' && !gradient.inGamut()) {
@@ -569,7 +675,7 @@ DEALINGS IN THE SOFTWARE. -->
       });
     }
 
-    let setupMulti = () => {
+    const setupMulti = () => {
       let mix_container_multi = document.querySelector('#mix_container_multi');
       let mix_container_multi_data = "";
 
@@ -581,7 +687,7 @@ DEALINGS IN THE SOFTWARE. -->
           let factor2 = col;
           let factor3 = row;
 
-          mix_container_multi_data += `<span class='mix_part_multi' factor_1='${factor1}' factor_2='${factor2}' factor_3='${factor3}' style='background: #fff;' : '')}'></span>`;
+          mix_container_multi_data += `<span class='mix_part hexagon' factor_1='${factor1}' factor_2='${factor2}' factor_3='${factor3}' style='background: #fff;' : '')}'></span>`;
         }
 
         mix_container_multi_data += "</div>"
@@ -589,9 +695,9 @@ DEALINGS IN THE SOFTWARE. -->
 
       mix_container_multi.innerHTML = mix_container_multi_data;
 
-      document.querySelectorAll("#mix_container_multi .mix_part_multi").forEach(d => {
+      document.querySelectorAll("#mix_container_multi .mix_part").forEach(d => {
         d.addEventListener("click", function (e) {
-          let mixPart = e.target.closest('.mix_part_multi');
+          let mixPart = e.target.closest('.mix_part');
 
           let c1 = new spectral.Color(document.querySelector("#color1").value);
           let c2 = new spectral.Color(document.querySelector("#color2").value);
@@ -655,6 +761,12 @@ DEALINGS IN THE SOFTWARE. -->
       output.querySelector(".hex").innerHTML = color.toString();
     }
 
+    const updateTintingStrengthText = () => {
+      document.querySelector("#color1_tinting_value").textContent = parseFloat(document.querySelector("#color1_tinting_strength").value).toFixed(2);
+      document.querySelector("#color2_tinting_value").textContent = parseFloat(document.querySelector("#color2_tinting_strength").value).toFixed(2);
+      document.querySelector("#color3_tinting_value").textContent = parseFloat(document.querySelector("#color3_tinting_strength").value).toFixed(2);
+    }
+
     const updateBar = () => {
       let c1 = new spectral.Color(document.querySelector("#color1").value);
       let c2 = new spectral.Color(document.querySelector("#color2").value);
@@ -664,7 +776,7 @@ DEALINGS IN THE SOFTWARE. -->
 
       let gamutmethod = document.querySelector("#gamutmethod").value;
 
-      document.querySelectorAll("#mix_container_bar .mix_part_bar").forEach(d => {
+      document.querySelectorAll("#mix_container_bar .mix_part").forEach(d => {
         let factor1 = parseInt(d.getAttribute("factor_1"));
         let factor2 = parseInt(d.getAttribute("factor_2"));
 
@@ -680,11 +792,6 @@ DEALINGS IN THE SOFTWARE. -->
         d.style.setProperty('background-color', mix.toString());
         d.style.setProperty('color', mix.luminance < 0.25 ? '#ccc' : '#333');
       });
-
-      updateCodeBlock("#mix_container_bar_code", `let color1 = new spectral.Color("${document.querySelector("#color1").value}");
-let color2 = new spectral.Color("${document.querySelector("#color2").value}");
-
-let mix = spectral.mix([color1, ...], [color2, ...]);`);
     }
 
     const updatePalette = () => {
@@ -696,7 +803,7 @@ let mix = spectral.mix([color1, ...], [color2, ...]);`);
 
       let gamutmethod = document.querySelector("#gamutmethod").value;
 
-      document.querySelectorAll("#mix_container_palette .mix_part_palette").forEach(d => {
+      document.querySelectorAll("#mix_container_palette .mix_part").forEach(d => {
         let index = parseInt(d.getAttribute("index"));
 
         let palette = spectral.palette(c1, c2, mixCount);
@@ -710,11 +817,6 @@ let mix = spectral.mix([color1, ...], [color2, ...]);`);
         d.style.setProperty('background-color', c.toString());
         d.style.setProperty('color', c.luminance < 0.25 ? '#ccc' : '#333');
       });
-
-      updateCodeBlock("#mix_container_palette_code", `let color1 = new spectral.Color("${document.querySelector("#color1").value}");
-let color2 = new spectral.Color("${document.querySelector("#color2").value}");
-
-let palette = spectral.palette(color1, color2, size)[...];`);
     }
 
     const updateGradient = () => {
@@ -728,14 +830,15 @@ let palette = spectral.palette(color1, color2, size)[...];`);
 
       let gamutmethod = document.querySelector("#gamutmethod").value;
 
-      document.querySelectorAll("#mix_container_gradient .mix_part_gradient").forEach(d => {
+      document.querySelectorAll("#mix_container_gradient .mix_part").forEach(d => {
         let factor = parseFloat(d.getAttribute("factor"));
 
         let gradient = spectral.gradient(
           factor,
           [c1, 0.0],
-          [c2, 0.5],
-          [c3, 1.0]
+          [c2, 0.33],
+          [c3, 0.66],
+          [c1, 1.0]
         );
 
         if (gamutmethod != 'none' && !gradient.inGamut()) {
@@ -745,17 +848,9 @@ let palette = spectral.palette(color1, color2, size)[...];`);
         d.style.setProperty('background-color', gradient.toString());
         d.style.setProperty('color', gradient.luminance < 0.25 ? '#ccc' : '#333');
       });
-
-      updateCodeBlock("#mix_container_gradient_code", `let color1 = new spectral.Color("${document.querySelector("#color1").value}");
-let color2 = new spectral.Color("${document.querySelector("#color2").value}");
-let color3 = new spectral.Color("${document.querySelector("#color3").value}");
-
-let gradient = spectral.gradient(
-     ..., [color1, 0.0], [color2, 0.5], [color3, 1.0]
-);`);
     }
 
-    let updateMulti = () => {
+    const updateMulti = () => {
       let c1 = new spectral.Color(document.querySelector("#color1").value);
       let c2 = new spectral.Color(document.querySelector("#color2").value);
       let c3 = new spectral.Color(document.querySelector("#color3").value);
@@ -766,7 +861,7 @@ let gradient = spectral.gradient(
 
       let gamutmethod = document.querySelector("#gamutmethod").value;
 
-      document.querySelectorAll("#mix_container_multi .mix_part_multi").forEach(d => {
+      document.querySelectorAll("#mix_container_multi .mix_part").forEach(d => {
         let factor1 = parseInt(d.getAttribute("factor_1"));
         let factor2 = parseInt(d.getAttribute("factor_2"));
         let factor3 = parseInt(d.getAttribute("factor_3"));
@@ -784,17 +879,9 @@ let gradient = spectral.gradient(
         d.style.setProperty('background-color', mix.toString());
         d.style.setProperty('color', mix.luminance < 0.25 ? '#ccc' : '#333');
       });
-
-      updateCodeBlock("#mix_container_multi_code", `let color1 = new spectral.Color("${document.querySelector("#color1").value}");
-let color2 = new spectral.Color("${document.querySelector("#color2").value}");
-let color3 = new spectral.Color("${document.querySelector("#color3").value}");
-
-let mix = spectral.mix(
-     [color1, ...], [color2, ...], [color3, ...]
-);`);
     }
 
-    let random = (id) => {
+    const random = (id) => {
       if (id == undefined) {
         for (let i = 1; i <= 3; i++) {
           let c = Math.floor(Math.random() * 16777215).toString(16);
@@ -816,7 +903,307 @@ let mix = spectral.mix(
       updatePalette();
       updateGradient();
       updateMulti();
+
+      updateCodeBlock("#setup_code", `let color1 = new spectral.Color("${document.querySelector("#color1").value}");
+let color2 = new spectral.Color("${document.querySelector("#color2").value}");
+let color3 = new spectral.Color("${document.querySelector("#color3").value}");
+
+let size = 8; //palette size`);
     }
+
+    const canvas = document.getElementById('canvas');
+
+    const preview = () => {
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#191326';
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      let c1 = new spectral.Color(document.querySelector("#color1").value);
+      let c2 = new spectral.Color(document.querySelector("#color2").value);
+      let c3 = new spectral.Color(document.querySelector("#color3").value);
+
+      canvasDrawQuad(ctx, 10, 20, 120, 120, c1, 'Color 1');
+      canvasDrawQuad(ctx, 10, 180, 120, 120, c2, 'Color 2');
+      canvasDrawQuad(ctx, 10, 340, 120, 120, c3, 'Color 3');
+
+      canvasDrawBar(ctx, document.querySelector('#mix_container_bar'), 140, 20, 447, 45, 'Mix');
+      canvasDrawBar(ctx, document.querySelector('#mix_container_palette'), 140, 100, 450, 45, 'Palette');
+      canvasDrawBar(ctx, document.querySelector('#mix_container_gradient'), 140, 180, 447, 45, 'Gradient');
+
+      canvasDrawMulti(ctx, document.querySelector('#mix_container_multi'), 140, 260, 450, 'Multi-color mix');
+
+      canvasImage(ctx, 'images/logo.png', 5, 510, 80, 80);
+      canvasImage(ctx, 'images/logo.text.png', 85, 528, 227, 50);
+    }
+
+    const canvasImage = (ctx, imageSrc, x, y, width, height) => {
+      const img = (typeof imageSrc === 'string') ? new Image() : imageSrc;
+
+      const draw = () => {
+        if (width && height) {
+          ctx.drawImage(img, x, y, width, height);
+        } else {
+          ctx.drawImage(img, x, y);
+        }
+      };
+
+      if (typeof imageSrc === 'string') {
+        img.onload = draw;
+        img.src = imageSrc;
+      } else {
+        draw();
+      }
+    }
+
+    const canvasDrawBar = (ctx, container, left, top, width, height, text) => {
+      ctx.font = '20px "Dancing Script", cursive';
+
+      ctx.fillStyle = '#cccccc';
+      ctx.fillText(text, left + (width / 2), top);
+
+      top += 16;
+
+      const cells = Array.from(container.querySelectorAll('.mix_part'));
+
+      if (!cells.length) return;
+
+      const cellWidth = (parseFloat(cells[0].style.width) / 100) * width;
+
+      cells.forEach((cell, i) => {
+        const fill = cell.style.backgroundColor || window.getComputedStyle(cell).backgroundColor || '#000';
+
+        ctx.fillStyle = fill;
+        ctx.fillRect(left + i * cellWidth, top, cellWidth + 1, height);
+      });
+    }
+
+    const canvasDrawMulti = (ctx, container, left, top, width, text) => {
+      ctx.font = '20px "Dancing Script", cursive';
+
+      ctx.fillStyle = '#cccccc';
+      ctx.fillText(text, left + (width / 2), top);
+
+      top += 16;
+
+      const radius = width / 15.5;
+      const hexW = Math.sqrt(3) * radius;
+      const hexH = 2 * radius;
+
+      const yScale = 0.75;
+      const overlapScale = 1.005;
+
+      const colSpacing = hexW;
+      const rowSpacing = 0.75 * (hexH * yScale);
+
+      function path(r) {
+        const p = new Path2D();
+
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI / 180) * (60 * i - 30);
+          const x = r * Math.cos(angle);
+          const y = r * Math.sin(angle);
+          if (i === 0) p.moveTo(x, y);
+          else p.lineTo(x, y);
+        }
+
+        p.closePath();
+
+        return p;
+      }
+
+      const hexPath = path(radius);
+
+      const rows = Array.from(container.children);
+      const maxCols = rows[0].children.length;
+      const totalWidth = (maxCols - 1) * colSpacing + hexW;
+
+      rows.forEach((row, r) => {
+        const cells = Array.from(row.children);
+        const rowOffsetX = r * (colSpacing / 2);
+        const rowOffsetY = r * rowSpacing;
+
+        cells.forEach((cell, c) => {
+          const fill = cell.style.backgroundColor || window.getComputedStyle(cell).backgroundColor || '#000';
+
+          const centerX = left + c * colSpacing + rowOffsetX + hexW / 2;
+          const centerY = top + rowOffsetY + (hexH * yScale) / 2;
+
+          ctx.save();
+          ctx.translate(centerX, centerY);
+
+          ctx.scale(overlapScale, yScale * overlapScale);
+          ctx.fillStyle = fill;
+          ctx.fill(hexPath);
+          ctx.restore();
+        });
+      });
+    }
+
+    const canvasDrawQuad = (ctx, left, top, width, height, color, text) => {
+      ctx.font = '20px "Dancing Script", cursive';
+
+      ctx.fillStyle = '#cccccc';
+      ctx.fillText(text, left + (width / 2), top);
+
+      top += 16;
+
+      const points = [
+        { x: left, y: top },
+        { x: left + width, y: top },
+        { x: left + width, y: top + height },
+        { x: left, y: top + height }
+      ];
+
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < 4; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.closePath();
+
+      ctx.fillStyle = color.toString();
+      ctx.fill();
+
+      ctx.font = "16px Arial";
+
+      ctx.fillStyle = color.luminance < 0.25 ? '#cccccc' : '#333333';
+      ctx.fillText(color.toString(), left + (width / 2), top + (height / 2));
+    }
+
+    const shareButton = document.getElementById("share_button");
+    const tweetButton = document.getElementById("tweet_button");
+    const overlay = document.getElementById("share_overlay");
+    const closeButton = document.getElementById("close_button");
+    const copyLinkButton = document.getElementById("copy_link_button");
+    const shareUrlField = document.getElementById("share_url_field");
+    const copiedMessage = document.getElementById("copied_message");
+
+    const shareUrl = () => {
+      const baseUrl = window.location.href.split("?")[0];
+
+      const url = new URL(baseUrl);
+
+      url.searchParams.set("c1", document.querySelector("#color1").value.slice(1));
+      url.searchParams.set("ts1", document.querySelector("#color1_tinting_strength").value);
+      url.searchParams.set("c2", document.querySelector("#color2").value.slice(1));
+      url.searchParams.set("ts2", document.querySelector("#color2_tinting_strength").value);
+      url.searchParams.set("c3", document.querySelector("#color3").value.slice(1));
+      url.searchParams.set("ts3", document.querySelector("#color3_tinting_strength").value);
+
+      return url.toString();
+    }
+
+    canvas.addEventListener("click", () => { copyCanvas(); });
+
+    async function copyCanvas() {
+      const filename = 'palette.png';
+      const canvas = document.getElementById('canvas');
+
+      const blob = await new Promise((resolve, reject) =>
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png')
+      );
+
+      const canClipboardWrite = !!(navigator.clipboard && window.ClipboardItem);
+      if (canClipboardWrite) {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+
+          copiedMessage.style.display = "flex";
+          setTimeout(() => copiedMessage.style.display = "none", 2000);
+
+          return;
+        } catch (e) {
+          // fall through to Share/Download
+          // iOS Safari usually throws here
+        }
+      }
+
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: shareUrl(), text: '' });
+
+          copiedMessage.style.display = "flex";
+          setTimeout(() => copiedMessage.style.display = "none", 2000);
+
+          return;
+        } catch (e) {
+          // user cancelled or share not available → fall through
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        a.remove();
+      }, 0);
+
+      copiedMessage.style.display = "flex";
+      setTimeout(() => copiedMessage.style.display = "none", 2000);
+    }
+
+    tweetButton.addEventListener("click", () => {
+      const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl())}`;
+
+      window.open(twitterUrl, "_blank");
+    });
+
+    shareButton.addEventListener("click", () => {
+      preview();
+
+      shareUrlField.value = shareUrl();
+      overlay.style.display = "flex";
+      copiedMessage.style.display = "none";
+    });
+
+    const closeOverlay = () => {
+      overlay.style.display = "none";
+    }
+
+    closeButton.addEventListener("click", closeOverlay);
+
+    overlay.addEventListener("click", e => {
+      if (e.target === overlay) closeOverlay();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeOverlay();
+    });
+
+    async function copyTextToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+
+        copiedMessage.style.display = "flex";
+        setTimeout(() => copiedMessage.style.display = "none", 2000);
+      } catch (err) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.top = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+
+        copiedMessage.style.display = "flex";
+        setTimeout(() => copiedMessage.style.display = "none", 2000);
+      }
+    }
+
+    copyLinkButton.addEventListener("click", () => {
+      copyTextToClipboard(shareUrlField.value);
+    });
   </script>
 </body>
 
