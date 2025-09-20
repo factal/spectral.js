@@ -23,15 +23,28 @@
 #ifndef SPECTRAL
 #define SPECTRAL
 
+// Number of wavelength samples used for the discretised reflectance curves.
+// The distribution mirrors the JavaScript implementation (roughly 10 nm steps
+// from 380 nm to 780 nm) so that CPU and GPU paths produce identical colours.
 const int SPECTRAL_SIZE = 38;
+// IEC 61966-2-1 transfer curve exponent used when converting between gamma
+// encoded sRGB values and their linear-light equivalents.
 const float SPECTRAL_GAMMA = 2.4;
+// Smallest allowed reflectance value to guard against divisions by zero in the
+// Kubelka–Munk equations when a band is fully absorbing.
 const float SPECTRAL_EPSILON = 0.0000000000000001;
 
 float spectral_uncompand(float x) {
+  // Piecewise sRGB inverse transfer function: linear segment near black and a
+  // power law segment elsewhere. This mirrors the CPU implementation so that
+  // the same input colours can be shared between environments.
   return (x < 0.04045) ? x / 12.92 : pow((x + 0.055) / 1.055, SPECTRAL_GAMMA);
 }
 
 float spectral_compand(float x) {
+  // Forward sRGB transfer function (linear -> non-linear). The output is not
+  // clamped here; clamping happens in spectral_linear_to_srgb once all channels
+  // are processed.
   return (x < 0.0031308) ? x * 12.92 : 1.055 * pow(x, 1.0 / SPECTRAL_GAMMA) - 0.055;
 }
 
@@ -48,14 +61,19 @@ void spectral_linear_to_reflectance(vec3 lrgb, inout float R[SPECTRAL_SIZE]) {
 
   lrgb -= w;
 
+  // Resolve the cyan, magenta and yellow contributions that can be expressed
+  // as the overlap of two primaries once the neutral component has been
+  // removed.
   float c = min(lrgb.g, lrgb.b);
   float m = min(lrgb.r, lrgb.b);
   float y = min(lrgb.r, lrgb.g);
 
+  // The remaining single-channel energy is mapped to the spectral basis for
+  // the red, green and blue primaries.
   float r = min(max(0.0, lrgb.r - lrgb.b), max(0.0, lrgb.r - lrgb.g));
   float g = min(max(0.0, lrgb.g - lrgb.b), max(0.0, lrgb.g - lrgb.r));
   float b = min(max(0.0, lrgb.b - lrgb.g), max(0.0, lrgb.b - lrgb.r));
-  
+
   R[ 0] = max(SPECTRAL_EPSILON, w * 1.0011607271876400 + c * 0.9705850013229620 + m * 0.9906735573199880 + y * 0.0210523371789306 + r * 0.0315605737777207 + g * 0.0095560747554212 + b * 0.9794047525020140);
   R[ 1] = max(SPECTRAL_EPSILON, w * 1.0011606515972800 + c * 0.9705924981434250 + m * 0.9906715249619790 + y * 0.0210564627517414 + r * 0.0315520718330149 + g * 0.0095581580120851 + b * 0.9794007068431300);
   R[ 2] = max(SPECTRAL_EPSILON, w * 1.0011603192274700 + c * 0.9706253487298910 + m * 0.9906625823534210 + y * 0.0210746178695038 + r * 0.0315148215513658 + g * 0.0095673245444588 + b * 0.9793829034702610);
@@ -156,10 +174,14 @@ vec3 spectral_reflectance_to_xyz(float R[SPECTRAL_SIZE]) {
 }
 
 float KS(float R) {
-	return pow(1.0 - R, 2.0) / (2.0 * R);
+  // Direct implementation of the Kubelka–Munk forward transform that
+  // converts a reflectance band into its absorption/scattering ratio.
+  return pow(1.0 - R, 2.0) / (2.0 * R);
 }
 
 float KM(float KS) {
+  // Inverse Kubelka–Munk transform: reconstructs a reflectance value from an
+  // averaged absorption/scattering ratio.
   return 1.0 + KS - sqrt(pow(KS, 2.0) + 2.0 * KS);
 }
 
@@ -181,13 +203,18 @@ vec3 spectral_mix(vec3 color1, float tintingStrength1, float factor1, vec3 color
   for (int i = 0; i < SPECTRAL_SIZE; i++) {
     float concentration1 = pow(factor1, 2.) * pow(tintingStrength1, 2.) * luminance1;
     float concentration2 = pow(factor2, 2.) * pow(tintingStrength2, 2.) * luminance2;
-		
-		float totalConcentration = concentration1 + concentration2;
-		
+
+    // Total pigment concentration for this wavelength sample. Using the sum as
+    // a denominator normalises the mixture so that the resulting reflectance
+    // remains between zero and one.
+    float totalConcentration = concentration1 + concentration2;
+
     float ksMix = 0.;
-		
-		ksMix += KS(R1[i]) * concentration1;
-		ksMix += KS(R2[i]) * concentration2;
+
+    // Accumulate the Kubelka–Munk K/S ratio for each pigment weighted by its
+    // concentration. This is equivalent to the additive rule for the KM model.
+    ksMix += KS(R1[i]) * concentration1;
+    ksMix += KS(R2[i]) * concentration2;
 
     R[i] = KM(ksMix / totalConcentration);
   }
@@ -226,14 +253,14 @@ vec3 spectral_mix(vec3 color1, float tintingStrength1, float factor1, vec3 color
     float concentration1 = pow(factor1, 2.) * pow(tintingStrength1, 2.) * luminance1;
     float concentration2 = pow(factor2, 2.) * pow(tintingStrength2, 2.) * luminance2;
     float concentration3 = pow(factor3, 2.) * pow(tintingStrength3, 2.) * luminance3;
-		
-		float totalConcentration = concentration1 + concentration2 + concentration3;
-		
+
+    float totalConcentration = concentration1 + concentration2 + concentration3;
+
     float ksMix = 0.;
-		
-		ksMix += KS(R1[i]) * concentration1;
-		ksMix += KS(R2[i]) * concentration2;
-		ksMix += KS(R3[i]) * concentration3;
+
+    ksMix += KS(R1[i]) * concentration1;
+    ksMix += KS(R2[i]) * concentration2;
+    ksMix += KS(R3[i]) * concentration3;
 
     R[i] = KM(ksMix / totalConcentration);
   }
@@ -273,15 +300,15 @@ vec3 spectral_mix(vec3 color1, float tintingStrength1, float factor1, vec3 color
     float concentration2 = pow(factor2, 2.) * pow(tintingStrength2, 2.) * luminance2;
     float concentration3 = pow(factor3, 2.) * pow(tintingStrength3, 2.) * luminance3;
     float concentration4 = pow(factor4, 2.) * pow(tintingStrength4, 2.) * luminance4;
-		
-		float totalConcentration = concentration1 + concentration2 + concentration3 + concentration4;
-		
+
+    float totalConcentration = concentration1 + concentration2 + concentration3 + concentration4;
+
     float ksMix = 0.;
-		
-		ksMix += KS(R1[i]) * concentration1;
-		ksMix += KS(R2[i]) * concentration2;
-		ksMix += KS(R3[i]) * concentration3;
-		ksMix += KS(R4[i]) * concentration4;
+
+    ksMix += KS(R1[i]) * concentration1;
+    ksMix += KS(R2[i]) * concentration2;
+    ksMix += KS(R3[i]) * concentration3;
+    ksMix += KS(R4[i]) * concentration4;
 
     R[i] = KM(ksMix / totalConcentration);
   }

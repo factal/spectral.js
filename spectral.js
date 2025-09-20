@@ -29,7 +29,13 @@
 })(this, function (exports) {
   ('use strict');
 
+  // Number of discrete wavelength samples used throughout the Kubelka–Munk
+  // calculations. The samples correspond to roughly 380–780 nm at 10 nm steps,
+  // matching the band structure of the spectral basis data below.
   const SIZE = 38;
+  // Gamma exponent for the sRGB transfer curve as defined by IEC 61966-2-1.
+  // Both the JavaScript implementation and the shader use this constant so
+  // that CPU and GPU conversions remain numerically consistent.
   const GAMMA = 2.4;
 
   /**
@@ -54,20 +60,33 @@
       if (args.length === 1) {
         if (typeof args[0] === 'string') {
           this.sRGB = parse(args[0]).slice(0, 3);
+          // Convert the encoded sRGB triplet into its linear-light form so
+          // that the subsequent Kubelka–Munk computations operate on physical
+          // intensities rather than gamma-encoded values.
           this.lRGB = sRGB_to_lRGB(this.sRGB);
+          // Project the linear RGB color onto the spectral basis functions to
+          // obtain a reflectance curve that can be mixed in the spectral domain.
           this.R = lRGB_to_R(this.lRGB);
+          // Accumulate the reflectance samples with the CIE color matching
+          // functions to obtain XYZ tristimulus values for downstream
+          // conversions and luminance queries.
           this.XYZ = R_to_XYZ(this.R);
         }
 
         if (Array.isArray(args[0])) {
           if (args[0].length === SIZE) {
             this.R = args[0];
+            // Skip the spectral reconstruction step and derive the tristimulus
+            // and sRGB representations directly from the provided reflectance.
             this.XYZ = R_to_XYZ(this.R);
             this.lRGB = XYZ_to_lRGB(this.XYZ);
             this.sRGB = lRGB_to_sRGB(this.lRGB);
           } else {
             this.sRGB = args[0];
             this.lRGB = sRGB_to_lRGB(this.sRGB);
+            // The linear RGB values can be interpreted as emissive primaries,
+            // but to reuse the Kubelka–Munk workflow we build a surrogate
+            // reflectance curve that approximates the same visible color.
             this.R = lRGB_to_R(this.lRGB);
             this.XYZ = R_to_XYZ(this.R);
           }
@@ -288,6 +307,8 @@
       current = XYZ_to_lRGB(XYZ);
 
       if (min_inGamut && inGamut(current)) {
+        // If the chroma candidate stays in gamut we expand the lower bound of
+        // the search interval. This preserves saturation whenever possible.
         min = chroma;
       } else {
         clipped = lRGB_to_OKLab(current.map((x) => utils.clamp(x)));
@@ -295,12 +316,16 @@
 
         if (E < jnd) {
           if (jnd - E < e) {
+            // The perceptual distance is below the threshold and further
+            // refinement would not yield a noticeable difference, so bail out.
             break;
           } else {
             min_inGamut = false;
             min = chroma;
           }
         } else {
+          // Otherwise the chroma overshoots the gamut boundary—reduce the
+          // interval and continue the binary search.
           max = chroma;
         }
       }
@@ -378,13 +403,24 @@
         totalConcentration = 0;
 
       for (let [color, factor] of colors) {
+        // Compute the effective pigment concentration for this band. Squaring
+        // the user-supplied factor and tinting strength accentuates their
+        // influence while preserving sign, and multiplying by the CIE Y
+        // component approximates the thickness weighting described in the
+        // Kubelka–Munk derivation.
         let concentration = factor ** 2 * color.tintingStrength ** 2 * color.luminance;
 
         totalConcentration += concentration;
 
+        // Mix in the absorption/scattering ratio of the color weighted by its
+        // concentration. The resulting sum is normalised by the total
+        // concentration before the inverse Kubelka–Munk transform is applied.
         ksMix += color.KS[i] * concentration;
       }
 
+      // Prevent division by zero when all concentrations vanish (for example
+      // when mixing multiple black colors) by relying on the epsilon embedded
+      // in the source reflectance data.
       R[i] = KM(ksMix / totalConcentration);
     }
 
@@ -582,11 +618,16 @@
   const lRGB_to_R = (lRGB) => {
     let w = Math.min(...lRGB);
 
+    // Extract the neutral (white) component shared by all three channels. The
+    // Kubelka–Munk basis includes an explicit white spectrum so we can subtract
+    // this term before resolving the chromatic contributions.
     lRGB = [lRGB[0] - w, lRGB[1] - w, lRGB[2] - w];
 
     let c = Math.min(lRGB[1], lRGB[2]);
     let m = Math.min(lRGB[0], lRGB[2]);
     let y = Math.min(lRGB[0], lRGB[1]);
+    // Residual single-channel contributions map onto the red, green and blue
+    // primaries that complete the spectral basis.
     let r = Math.max(0, Math.min(lRGB[0] - lRGB[2], lRGB[0] - lRGB[1]));
     let g = Math.max(0, Math.min(lRGB[1] - lRGB[2], lRGB[1] - lRGB[0]));
     let b = Math.max(0, Math.min(lRGB[2] - lRGB[1], lRGB[2] - lRGB[0]));
